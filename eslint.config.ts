@@ -17,6 +17,7 @@ export default await antfu(
       'crates/**',
       '**/drizzle/**',
       '**/.astro/**',
+      '**/*.md',
     ],
     rules: {
       'vue/prefer-separate-static-class': 'off',
@@ -51,13 +52,6 @@ export default await antfu(
           newlinesBetween: 'always',
         },
       ],
-    },
-  },
-  {
-    // 为 Markdown 文件中的代码块设置规则
-    files: ['**/*.md/*.*'],
-    rules: {
-      'antfu/top-level-function': 'off',
     },
   },
 )
