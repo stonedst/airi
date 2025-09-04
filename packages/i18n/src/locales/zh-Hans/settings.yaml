@@ -578,3 +578,6 @@ vrm:
   skybox:
     skybox-intensity: 天空盒光照强度
     skybox-specular-mix: 漫反射/镜面反射混合系数
+edge-tts:
+  description: Microsoft Edge 文本转语音服务
+  title: Edge TTS

@@ -620,3 +620,6 @@ vrm:
   skybox:
     skybox-intensity: SkyBox Intensity
     skybox-specular-mix: Specular Mix
+edge-tts:
+  description: Microsoft Edge Text-to-Speech service
+  title: Edge TTS

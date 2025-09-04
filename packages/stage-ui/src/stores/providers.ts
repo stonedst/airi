@@ -1172,6 +1172,91 @@ export const useProvidersStore = defineStore('providers', () => {
         },
       },
     },
+    'edge-tts': {
+      id: 'edge-tts',
+      category: 'speech',
+      tasks: ['text-to-speech'],
+      nameKey: 'settings.pages.providers.provider.edge-tts.title',
+      name: 'Edge TTS',
+      descriptionKey: 'settings.pages.providers.provider.edge-tts.description',
+      description: 'Microsoft Edge Text-to-Speech',
+      iconColor: 'i-simple-icons:microsoftedge',
+      // 默认配置选项，设置默认的 Edge TTS 服务地址
+      defaultOptions: () => ({
+        baseUrl: 'http://localhost:12345/',
+      }),
+      // 创建 Edge TTS 服务提供者
+      createProvider: async (config) => {
+        const provider: SpeechProvider = {
+          speech: () => {
+            const req = {
+              baseURL: config.baseUrl as string,
+              model: 'edge-tts',
+            }
+            return req
+          },
+        }
+        return provider
+      },
+      capabilities: {
+        // 获取可用的声音列表
+        listVoices: async (config) => {
+          const voicesUrl = config.baseUrl as string
+          try {
+            const response = await fetch(`${voicesUrl}voices`)
+            if (!response.ok) {
+              throw new Error(`Failed to fetch voices: ${response.statusText}`)
+            }
+            const voices = await response.json()
+            return voices.map((voice: any) => {
+              return {
+                id: voice.id,
+                name: voice.name,
+                provider: 'edge-tts',
+                languages: voice.languages,
+              }
+            })
+          }
+          catch (error) {
+            console.error('Error fetching Edge TTS voices:', error)
+            // 出错时返回默认声音列表，确保功能可用
+            return [
+              {
+                id: 'zh-CN-XiaoxiaoNeural',
+                name: 'Xiaoxiao (Chinese)',
+                provider: 'edge-tts',
+                languages: [{ code: 'zh', title: 'Chinese' }],
+              },
+              {
+                id: 'en-US-JennyNeural',
+                name: 'Jenny (English)',
+                provider: 'edge-tts',
+                languages: [{ code: 'en', title: 'English' }],
+              },
+            ]
+          }
+        },
+      },
+      // 验证配置是否有效
+      validators: {
+        validateProviderConfig: (config) => {
+          const errors = [
+            !config.baseUrl && new Error('Base URL is required. Default to http://localhost:12345/ for Edge TTS service.'),
+          ].filter(Boolean)
+
+          const res = baseUrlValidator.value(config.baseUrl)
+          if (res) {
+            return res
+          }
+
+          return {
+            errors,
+            reason: errors.filter(e => e).map(e => String(e)).join(', ') || '',
+            valid: !!config.baseUrl,
+          }
+        },
+      },
+    },
     'alibaba-cloud-model-studio': {
       id: 'alibaba-cloud-model-studio',
       category: 'speech',

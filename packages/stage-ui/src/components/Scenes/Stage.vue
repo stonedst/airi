@@ -158,6 +158,7 @@ async function handleSpeechGeneration(ctx: { data: string }) {
 }
 
 const ttsQueue = createQueue<string>({
+  // 处理程序
   handlers: [
     handleSpeechGeneration,
   ],
