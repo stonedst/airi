@@ -53,4 +53,11 @@ export default await antfu(
       ],
     },
   },
+  {
+    // 为 Markdown 文件中的代码块设置规则
+    files: ['**/*.md/*.*'],
+    rules: {
+      'antfu/top-level-function': 'off',
+    },
+  },
 )
