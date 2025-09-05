@@ -32,6 +32,7 @@
 2. 安装依赖：
    ```bash
    pip install edge-tts flask
+   pip install flask-cors
    ```
 
 3. 运行服务：
