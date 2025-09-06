@@ -1257,6 +1257,64 @@ export const useProvidersStore = defineStore('providers', () => {
         },
       },
     },
+    'bilibili-danmaku': {
+      id: 'bilibili-danmaku',
+      category: 'chat',
+      tasks: ['danmaku'],
+      nameKey: 'settings.pages.providers.provider.bilibili-danmaku.title',
+      name: 'Bilibili Danmaku',
+      descriptionKey: 'settings.pages.providers.provider.bilibili-danmaku.description',
+      description: 'Bilibili Live Danmaku Service',
+      icon: 'i-simple-icons:bilibili',
+      defaultOptions: () => ({
+        baseUrl: 'http://localhost:12346/',
+        ACCESS_KEY_ID: '',
+        ACCESS_KEY_SECRET: '',
+        APP_ID: '',
+        ROOM_OWNER_AUTH_CODE: '',
+      }),
+      createProvider: async (config) => {
+        // 弹幕服务不需要实际的 provider 实例
+        return {
+          chat: () => ({ baseURL: config.baseUrl as string }),
+        } as any
+      },
+      capabilities: {
+        listModels: async () => {
+          return [
+            {
+              id: 'bilibili-danmaku-v1',
+              name: 'Bilibili Danmaku v1',
+              provider: 'bilibili-danmaku',
+              description: 'Bilibili live streaming danmaku service',
+              contextLength: 0,
+            },
+          ]
+        },
+      },
+      validators: {
+        validateProviderConfig: (config) => {
+          const errors = [
+            !config.baseUrl && new Error('Base URL is required. Default to http://localhost:12346/ for Bilibili Danmaku service.'),
+            !config.ACCESS_KEY_ID && new Error('Access Key ID is required.'),
+            !config.ACCESS_KEY_SECRET && new Error('Access Key Secret is required.'),
+            !config.APP_ID && new Error('App ID is required.'),
+            !config.ROOM_OWNER_AUTH_CODE && new Error('Room Owner Auth Code is required.'),
+          ].filter(Boolean)
+
+          const res = baseUrlValidator.value(config.baseUrl)
+          if (res) {
+            return res
+          }
+
+          return {
+            errors,
+            reason: errors.filter(e => e).map(e => String(e)).join(', ') || '',
+            valid: !!config.baseUrl && !!config.ACCESS_KEY_ID && !!config.ACCESS_KEY_SECRET && !!config.APP_ID && !!config.ROOM_OWNER_AUTH_CODE,
+          }
+        },
+      },
+    },
     'alibaba-cloud-model-studio': {
       id: 'alibaba-cloud-model-studio',
       category: 'speech',

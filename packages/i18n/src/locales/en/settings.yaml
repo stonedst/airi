@@ -623,3 +623,20 @@ vrm:
 edge-tts:
   description: Microsoft Edge Text-to-Speech service
   title: Edge TTS
+bilibili-danmaku:
+  description: Bilibili Live Danmaku Service
+  title: Bilibili Danmaku
+  fields:
+    field:
+      access_key_id:
+        label: Access Key ID
+        placeholder: Enter the Access Key ID from Bilibili Open Platform
+      access_key_secret:
+        label: Access Key Secret
+        placeholder: Enter the corresponding Access Key Secret
+      app_id:
+        label: App ID
+        placeholder: Enter the App ID of your project on Bilibili Open Platform
+      room_owner_auth_code:
+        label: Room Owner Auth Code
+        placeholder: Enter the Room Owner Authentication Code

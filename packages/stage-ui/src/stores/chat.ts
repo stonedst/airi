@@ -2,7 +2,7 @@ import type { ChatProvider } from '@xsai-ext/shared-providers'
 import type { CommonContentPart, Message, SystemMessage } from '@xsai/shared-chat'
 
 import type { StreamEvent } from '../stores/llm'
-import type { ChatAssistantMessage, ChatMessage, ChatSlices } from '../types/chat'
+import type { ChatAssistantMessage, ChatMessage, ChatSlices, ChatUserMessage } from '../types/chat'
 
 import { defineStore, storeToRefs } from 'pinia'
 import { ref, toRaw } from 'vue'
@@ -243,6 +243,38 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // 添加一个方法来处理外部消息
+  async function handleExternalMessage(
+    message: string,
+    metadata?: Record<string, any>,
+  ) {
+    try {
+      // 添加消息到聊天记录
+      const userMessage: ChatUserMessage = {
+        role: 'user',
+        content: message,
+      }
+
+      if (metadata) {
+        userMessage.metadata = metadata
+      }
+
+      messages.value.push(userMessage)
+
+      // 触发消息组成前的钩子
+      for (const hook of onBeforeMessageComposedHooks.value) {
+        await hook(message)
+      }
+    }
+    catch (error) {
+      console.error('Error handling external message:', error)
+      messages.value.push({
+        role: 'error',
+        content: `处理外部消息时出错: ${(error as Error).message}`,
+      })
+    }
+  }
+
   return {
     sending,
     messages,
@@ -251,6 +283,7 @@ export const useChatStore = defineStore('chat', () => {
     discoverToolsCompatibility,
 
     send,
+    handleExternalMessage,
 
     onBeforeMessageComposed,
     onAfterMessageComposed,

@@ -581,3 +581,20 @@ vrm:
 edge-tts:
   description: Microsoft Edge 文本转语音服务
   title: Edge TTS
+bilibili-danmaku:
+  description: B站直播间弹幕服务
+  title: B站弹幕服务
+  fields:
+    field:
+      access_key_id:
+        label: Access Key ID
+        placeholder: 输入在B站开放平台申请的Access Key ID
+      access_key_secret:
+        label: Access Key Secret
+        placeholder: 输入对应的Access Key Secret
+      app_id:
+        label: App ID
+        placeholder: 输入在B站开放平台创建的项目ID
+      room_owner_auth_code:
+        label: 主播身份码
+        placeholder: 输入主播身份码

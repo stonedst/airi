@@ -26,4 +26,9 @@ export interface ChatAssistantMessage extends AssistantMessage {
   }[]
 }
 
-export type ChatMessage = ChatAssistantMessage | SystemMessage | ToolMessage | UserMessage
+// 扩展 UserMessage 类型以支持 metadata
+export interface ChatUserMessage extends UserMessage {
+  metadata?: Record<string, any>
+}
+
+export type ChatMessage = ChatAssistantMessage | SystemMessage | ToolMessage | UserMessage | ChatUserMessage
