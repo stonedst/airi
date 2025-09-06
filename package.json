@@ -92,9 +92,6 @@
       "string.prototype.matchall": "npm:@nolyfill/string.prototype.matchall@^1.0.44"
     }
   },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
-  },
   "lint-staged": {
     "*": "eslint --fix"
   }
