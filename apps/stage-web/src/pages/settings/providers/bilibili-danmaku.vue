@@ -228,49 +228,49 @@ function handleResetSettings() {
           <div class="flex flex-col gap-2">
             <label class="flex flex-col gap-1">
               <span class="text-sm font-medium">
-                {{ t('settings.pages.providers.provider.bilibili-danmaku.fields.field.access_key_id.label') }}
+                {{ t('settings.bilibili-danmaku.fields.field.access_key_id.label') }}
               </span>
               <input
                 v-model="ACCESS_KEY_ID"
                 class="w-full border border-neutral-200 rounded-lg bg-neutral-50 px-3 py-2 text-sm outline-none dark:border-neutral-700 focus:border-primary-500 dark:bg-neutral-800 dark:focus:border-primary-500"
                 type="password"
-                :placeholder="t('settings.pages.providers.provider.bilibili-danmaku.fields.field.access_key_id.placeholder')"
+                :placeholder="t('settings.bilibili-danmaku.fields.field.access_key_id.placeholder')"
               >
             </label>
 
             <label class="flex flex-col gap-1">
               <span class="text-sm font-medium">
-                {{ t('settings.pages.providers.provider.bilibili-danmaku.fields.field.access_key_secret.label') }}
+                {{ t('settings.bilibili-danmaku.fields.field.access_key_secret.label') }}
               </span>
               <input
                 v-model="ACCESS_KEY_SECRET"
                 class="w-full border border-neutral-200 rounded-lg bg-neutral-50 px-3 py-2 text-sm outline-none dark:border-neutral-700 focus:border-primary-500 dark:bg-neutral-800 dark:focus:border-primary-500"
                 type="password"
-                :placeholder="t('settings.pages.providers.provider.bilibili-danmaku.fields.field.access_key_secret.placeholder')"
+                :placeholder="t('settings.bilibili-danmaku.fields.field.access_key_secret.placeholder')"
               >
             </label>
 
             <label class="flex flex-col gap-1">
               <span class="text-sm font-medium">
-                {{ t('settings.pages.providers.provider.bilibili-danmaku.fields.field.app_id.label') }}
+                {{ t('settings.bilibili-danmaku.fields.field.app_id.label') }}
               </span>
               <input
                 v-model="APP_ID"
                 class="w-full border border-neutral-200 rounded-lg bg-neutral-50 px-3 py-2 text-sm outline-none dark:border-neutral-700 focus:border-primary-500 dark:bg-neutral-800 dark:focus:border-primary-500"
                 type="text"
-                :placeholder="t('settings.pages.providers.provider.bilibili-danmaku.fields.field.app_id.placeholder')"
+                :placeholder="t('settings.bilibili-danmaku.fields.field.app_id.placeholder')"
               >
             </label>
 
             <label class="flex flex-col gap-1">
               <span class="text-sm font-medium">
-                {{ t('settings.pages.providers.provider.bilibili-danmaku.fields.field.room_owner_auth_code.label') }}
+                {{ t('settings.bilibili-danmaku.fields.field.room_owner_auth_code.label') }}
               </span>
               <input
                 v-model="ROOM_OWNER_AUTH_CODE"
                 class="w-full border border-neutral-200 rounded-lg bg-neutral-50 px-3 py-2 text-sm outline-none dark:border-neutral-700 focus:border-primary-500 dark:bg-neutral-800 dark:focus:border-primary-500"
                 type="password"
-                :placeholder="t('settings.pages.providers.provider.bilibili-danmaku.fields.field.room_owner_auth_code.placeholder')"
+                :placeholder="t('settings.bilibili-danmaku.fields.field.room_owner_auth_code.placeholder')"
               >
             </label>
           </div>

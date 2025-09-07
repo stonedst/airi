@@ -1261,9 +1261,9 @@ export const useProvidersStore = defineStore('providers', () => {
       id: 'bilibili-danmaku',
       category: 'chat',
       tasks: ['danmaku'],
-      nameKey: 'settings.pages.providers.provider.bilibili-danmaku.title',
+      nameKey: 'settings.bilibili-danmaku.title',
       name: 'Bilibili Danmaku',
-      descriptionKey: 'settings.pages.providers.provider.bilibili-danmaku.description',
+      descriptionKey: 'settings.bilibili-danmaku.description',
       description: 'Bilibili Live Danmaku Service',
       icon: 'i-simple-icons:bilibili',
       defaultOptions: () => ({
