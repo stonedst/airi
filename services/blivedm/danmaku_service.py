@@ -1,40 +1,50 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
-import requests
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, jsonify
 from flask_cors import CORS
 import blivedm
 import blivedm.models.open_live as open_models
 import blivedm.models.web as web_models
+import threading
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"])
 
-# Airi API endpoint
-AIRI_DANMAKU_API = "http://localhost:5173/api/danmaku"
+# 从环境变量获取配置
+ACCESS_KEY_ID = os.environ.get('ACCESS_KEY_ID')
+ACCESS_KEY_SECRET = os.environ.get('ACCESS_KEY_SECRET')
+APP_ID = os.environ.get('APP_ID')
+ROOM_OWNER_AUTH_CODE = os.environ.get('ROOM_OWNER_AUTH_CODE')
+
+
 
 # 全局变量存储客户端和处理器
 client = None
 handler = None
 
+# 存储最新的弹幕消息
+danmaku_messages = []
+
 class DanmakuHandler(blivedm.BaseHandler):
     def __init__(self, emit_callback):
         self.emit_callback = emit_callback
+
+    def _on_heartbeat(self, client: blivedm.BLiveClient, message: web_models.HeartbeatMessage):
+        print(f'[{client.room_id}] 心跳')
 
     def _on_open_live_danmaku(self, client: blivedm.OpenLiveClient, message: open_models.DanmakuMessage):
         danmaku_data = {
             'type': 'danmaku',
             'uname': message.uname,
             'msg': message.msg,
-            'uid': message.uid,
+            'uid': message.open_id,
             'room_id': message.room_id,
             'timestamp': message.timestamp,
         }
         self.emit_callback(danmaku_data)
-        
-        # 异步发送弹幕到Airi
-        asyncio.create_task(send_danmaku_to_airi(danmaku_data))
+        print(f"Received danmaku: {message.uname} - {message.msg}")
 
     def _on_open_live_gift(self, client: blivedm.OpenLiveClient, message: open_models.GiftMessage):
         gift_data = {
@@ -49,9 +59,6 @@ class DanmakuHandler(blivedm.BaseHandler):
             'timestamp': message.timestamp,
         }
         self.emit_callback(gift_data)
-        
-        # 发送礼物信息到Airi
-        asyncio.create_task(send_danmaku_to_airi(gift_data))
 
     def _on_open_live_buy_guard(self, client: blivedm.OpenLiveClient, message: open_models.GuardBuyMessage):
         guard_data = {
@@ -65,9 +72,6 @@ class DanmakuHandler(blivedm.BaseHandler):
             'timestamp': message.timestamp,
         }
         self.emit_callback(guard_data)
-        
-        # 发送大航海信息到Airi
-        asyncio.create_task(send_danmaku_to_airi(guard_data))
 
     def _on_open_live_super_chat(self, client: blivedm.OpenLiveClient, message: open_models.SuperChatMessage):
         sc_data = {
@@ -80,9 +84,6 @@ class DanmakuHandler(blivedm.BaseHandler):
             'timestamp': message.timestamp,
         }
         self.emit_callback(sc_data)
-        
-        # 发送醒目留言到Airi
-        asyncio.create_task(send_danmaku_to_airi(sc_data))
 
     def _on_open_live_like(self, client: blivedm.OpenLiveClient, message: open_models.LikeMessage):
         like_data = {
@@ -93,12 +94,6 @@ class DanmakuHandler(blivedm.BaseHandler):
             'timestamp': message.timestamp,
         }
         self.emit_callback(like_data)
-        
-        # 发送点赞信息到Airi
-        asyncio.create_task(send_danmaku_to_airi(like_data))
-
-# 存储最新的弹幕消息
-danmaku_messages = []
 
 def emit_danmaku(data):
     """将弹幕数据添加到列表中，供前端获取"""
@@ -107,82 +102,33 @@ def emit_danmaku(data):
     if len(danmaku_messages) > 100:
         danmaku_messages.pop(0)
 
-async def send_danmaku_to_airi(danmaku_data):
-    """将弹幕发送到Airi系统"""
-    try:
-        # 构造发送给Airi的数据
-        airi_data = {
-            'uname': danmaku_data.get('uname', 'Unknown'),
-            'msg': danmaku_data.get('msg') or danmaku_data.get('message') or 
-                  f"收到{danmaku_data.get('type', 'event')}: {danmaku_data.get('gift_name', '')}",
-            'uid': danmaku_data.get('uid', 0),
-            'room_id': danmaku_data.get('room_id', 0),
-            'timestamp': danmaku_data.get('timestamp', 0),
-            'type': danmaku_data.get('type', 'unknown')
-        }
-        
-        # 发送到Airi API
-        response = requests.post(
-            AIRI_DANMAKU_API,
-            json=airi_data,
-            headers={"Content-Type": "application/json"}
-        )
-        
-        if response.status_code != 200:
-            print(f"Failed to send danmaku to AIRI: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"Error sending danmaku to AIRI: {e}")
-
-@app.route('/configure', methods=['POST'])
-def configure():
+async def run_single_client():
+    """
+    演示监听一个直播间
+    """
     global client, handler
     
-    # 如果已有客户端在运行，先停止它
-    if client is not None:
-        asyncio.run(stop_client())
-    
-    data = request.json
-    access_key_id = data.get('ACCESS_KEY_ID')
-    access_key_secret = data.get('ACCESS_KEY_SECRET')
-    app_id = data.get('APP_ID')
-    room_owner_auth_code = data.get('ROOM_OWNER_AUTH_CODE')
-    
-    if not all([access_key_id, access_key_secret, app_id, room_owner_auth_code]):
-        return jsonify({'error': 'Missing required parameters'}), 400
-    
-    # 确保当前线程有事件循环
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    
-    # 创建新的客户端
+    # 检查必要的配置是否存在
+    if not all([ACCESS_KEY_ID, ACCESS_KEY_SECRET, APP_ID, ROOM_OWNER_AUTH_CODE]):
+        print("Missing required environment variables")
+        return
+
     client = blivedm.OpenLiveClient(
-        access_key_id=access_key_id,
-        access_key_secret=access_key_secret,
-        app_id=int(app_id),
-        room_owner_auth_code=room_owner_auth_code,
+        access_key_id=ACCESS_KEY_ID,
+        access_key_secret=ACCESS_KEY_SECRET,
+        app_id=int(APP_ID),
+        room_owner_auth_code=ROOM_OWNER_AUTH_CODE,
     )
     handler = DanmakuHandler(emit_danmaku)
     client.set_handler(handler)
-    
-    # 启动客户端
-    asyncio.run(start_client())
-    
-    return jsonify({'status': 'success', 'message': 'Danmaku service configured and started'})
 
-async def start_client():
-    global client
     client.start()
-    await client.join()
-
-async def stop_client():
-    global client, handler
-    if client:
+    try:
+        print("Danmaku client started")
+        await client.join()
+    finally:
         await client.stop_and_close()
-        client = None
-        handler = None
+        print("Danmaku client stopped")
 
 @app.route('/messages', methods=['GET'])
 def get_messages():
@@ -197,16 +143,18 @@ def get_status():
         'message_count': len(danmaku_messages)
     })
 
-@app.route('/stop', methods=['POST'])
-def stop():
-    """停止弹幕服务"""
-    global client, handler
-    if client is not None:
-        asyncio.run(stop_client())
-        return jsonify({'status': 'success', 'message': 'Danmaku service stopped'})
-    else:
-        return jsonify({'status': 'error', 'message': 'Danmaku service not running'})
+def run_asyncio_loop(loop):
+    """在单独的线程中运行 asyncio 事件循环"""
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(run_single_client())
 
-    
+
 if __name__ == '__main__':
+    # 创建新的事件循环并在单独的线程中运行弹幕客户端
+    loop = asyncio.new_event_loop()
+    danmaku_thread = threading.Thread(target=run_asyncio_loop, args=(loop,))
+    danmaku_thread.daemon = True
+    danmaku_thread.start()
+    
+    # 在主线程中运行 Flask 应用
     app.run(host='localhost', port=12346, debug=True)
