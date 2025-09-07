@@ -27,6 +27,8 @@ const providerId = 'bilibili-danmaku'
 const providerMetadata = computed(() => providersStore.getProviderMetadata(providerId))
 
 const validationMessage = ref('')
+const serviceTestResult = ref<{ success: boolean, message: string } | null>(null)
+const isTestingService = ref(false)
 
 // Base URL for the danmaku service
 const baseUrl = computed({
@@ -102,19 +104,54 @@ function removeKeyValue(index: number, headers: { key: string, value: string }[]
   }
 }
 
-watch(headers, (headers) => {
-  if (headers.length > 0 && (headers[headers.length - 1].key !== '' || headers[headers.length - 1].value !== '')) {
-    headers.push({ key: '', value: '' })
-  }
+// 测试服务是否可用
+async function testService() {
+  isTestingService.value = true
+  serviceTestResult.value = null
 
-  providers.value[providerId].headers = headers.filter(header => header.key !== '').reduce((acc, header) => {
-    acc[header.key] = header.value
-    return acc
-  }, {} as Record<string, string>)
-}, {
-  deep: true,
-  immediate: true,
-})
+  try {
+    const baseUrlValue = baseUrl.value
+    const response = await fetch(`${baseUrlValue}status`)
+
+    if (!response.ok) {
+      serviceTestResult.value = {
+        success: false,
+        message: t('settings.bilibili-danmaku.test.connectionFailed', {
+          status: response.status,
+          statusText: response.statusText,
+        }),
+      }
+      return
+    }
+
+    const data = await response.json()
+    if (data.running !== undefined) {
+      serviceTestResult.value = {
+        success: true,
+        message: data.running
+          ? t('settings.bilibili-danmaku.test.serviceRunning')
+          : t('settings.bilibili-danmaku.test.serviceNotRunning'),
+      }
+    }
+    else {
+      serviceTestResult.value = {
+        success: true,
+        message: t('settings.bilibili-danmaku.test.serviceAvailable'),
+      }
+    }
+  }
+  catch (error) {
+    serviceTestResult.value = {
+      success: false,
+      message: t('settings.bilibili-danmaku.test.connectionError', {
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    }
+  }
+  finally {
+    isTestingService.value = false
+  }
+}
 
 async function refetch() {
   loading.value++
@@ -208,6 +245,24 @@ function handleResetSettings() {
         </div>
       </template>
     </Alert>
+
+    <!-- Service Test Result -->
+    <Alert v-if="serviceTestResult && !isTestingService" :type="serviceTestResult.success ? 'success' : 'error'">
+      <template #title>
+        {{ serviceTestResult.success ? t('settings.bilibili-danmaku.test.success') : t('settings.bilibili-danmaku.test.failed') }}
+      </template>
+      <template #content>
+        <div class="whitespace-pre-wrap break-all">
+          {{ serviceTestResult.message }}
+        </div>
+      </template>
+    </Alert>
+    <Alert v-if="isTestingService" type="loading">
+      <template #title>
+        {{ t('settings.bilibili-danmaku.test.testing') }}
+      </template>
+    </Alert>
+
     <ProviderSettingsLayout
       :provider-name="providerMetadata?.localizedName"
       :provider-icon="providerMetadata?.icon"
@@ -273,6 +328,18 @@ function handleResetSettings() {
                 :placeholder="t('settings.bilibili-danmaku.fields.field.room_owner_auth_code.placeholder')"
               >
             </label>
+
+            <!-- Test Service Button -->
+            <div class="pt-2">
+              <button
+                type="button"
+                class="rounded-lg bg-primary-500 px-4 py-2 text-sm text-white font-medium dark:bg-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:hover:bg-primary-700 dark:focus:ring-offset-neutral-900"
+                :disabled="isTestingService"
+                @click="testService"
+              >
+                {{ t('settings.bilibili-danmaku.test.button') }}
+              </button>
+            </div>
           </div>
         </ProviderBasicSettings>
 
@@ -291,10 +358,3 @@ function handleResetSettings() {
     </ProviderSettingsLayout>
   </div>
 </template>
-
-<route lang="yaml">
-meta:
-  layout: settings
-  stageTransition:
-    name: slide
-</route>

@@ -598,3 +598,13 @@ bilibili-danmaku:
       room_owner_auth_code:
         label: 主播身份码
         placeholder: 输入主播身份码
+  test:
+    button: 测试服务
+    testing: 正在测试服务...
+    success: 服务测试成功
+    failed: 服务测试失败
+    serviceAvailable: 服务可用
+    serviceRunning: 服务正在运行
+    serviceNotRunning: 服务未运行
+    connectionFailed: 连接失败:{status} {statusText}
+    connectionError: 连接错误:{error}
