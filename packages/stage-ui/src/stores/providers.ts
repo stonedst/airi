@@ -1176,9 +1176,9 @@ export const useProvidersStore = defineStore('providers', () => {
       id: 'edge-tts',
       category: 'speech',
       tasks: ['text-to-speech'],
-      nameKey: 'settings.pages.providers.provider.edge-tts.title',
+      nameKey: 'settings.edge-tts.title',
       name: 'Edge TTS',
-      descriptionKey: 'settings.pages.providers.provider.edge-tts.description',
+      descriptionKey: 'settings.edge-tts.description',
       description: 'Microsoft Edge Text-to-Speech',
       iconColor: 'i-simple-icons:microsoftedge',
       // 默认配置选项，设置默认的 Edge TTS 服务地址
