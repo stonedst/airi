@@ -28,7 +28,7 @@ const { themeColorsHueDynamic } = storeToRefs(useSettings())
 
 const { askPermission } = useSettingsAudioDevice()
 const { enabled, selectedAudioInput } = storeToRefs(useSettingsAudioDevice())
-const { send, onAfterMessageComposed, discoverToolsCompatibility } = useChatStore()
+const { send, onAfterMessageComposed, discoverToolsCompatibility, cleanupMessages } = useChatStore()
 const { messages } = storeToRefs(useChatStore())
 const { audioContext } = useAudioContext()
 const { t } = useI18n()
@@ -144,7 +144,7 @@ onAfterMessageComposed(async () => {
         h-full w-full overflow-scroll rounded-xl
         bg="primary-50/50 dark:primary-950/70" backdrop-blur-md
       >
-        <ChatHistory h-full flex-1 p-4 w="full" max-h="<md:[60%]" />
+        <ChatHistory h-full flex-1 w="full" max-h="<md:[60%]" />
         <div h="<md:full" flex gap-2>
           <BasicTextarea
             v-model="messageInput"
@@ -164,5 +164,18 @@ onAfterMessageComposed(async () => {
         </div>
       </div>
     </div>
+
+    <button
+      class="max-h-[10lh] min-h-[1lh]"
+      bg="neutral-100 dark:neutral-800"
+      text="lg neutral-500 dark:neutral-400"
+      hover:text="red-500 dark:red-400"
+      absolute bottom--8 right-0
+      flex items-center justify-center rounded-md p-2 outline-none
+      transition-colors transition-transform active:scale-95
+      @click="cleanupMessages"
+    >
+      <div class="i-solar:trash-bin-2-bold-duotone" />
+    </button>
   </div>
 </template>
