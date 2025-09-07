@@ -608,3 +608,14 @@ bilibili-danmaku:
     serviceNotRunning: 服务未运行
     connectionFailed: 连接失败:{status} {statusText}
     connectionError: 连接错误:{error}
+  configure:
+    button: 配置服务
+    configuring: 正在配置服务...
+    success: 服务配置成功
+    failed: 服务配置失败
+    configSuccess: 服务已成功配置并启动
+    configFailed: 配置失败:{status} {statusText}
+    configFailedWithError: 配置失败:{error}
+    configFailedWithMessage: 配置失败:{message}
+    configFailedGeneric: 配置服务时发生未知错误
+    configError: 配置错误:{error}

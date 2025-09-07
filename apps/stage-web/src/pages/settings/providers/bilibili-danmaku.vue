@@ -29,6 +29,8 @@ const providerMetadata = computed(() => providersStore.getProviderMetadata(provi
 const validationMessage = ref('')
 const serviceTestResult = ref<{ success: boolean, message: string } | null>(null)
 const isTestingService = ref(false)
+const isConfiguringService = ref(false)
+const configurationResult = ref<{ success: boolean, message: string } | null>(null)
 
 // Base URL for the danmaku service
 const baseUrl = computed({
@@ -153,6 +155,69 @@ async function testService() {
   }
 }
 
+// 配置并启动服务
+async function configureService() {
+  isConfiguringService.value = true
+  configurationResult.value = null
+
+  try {
+    const baseUrlValue = baseUrl.value
+    const response = await fetch(`${baseUrlValue}configure`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ACCESS_KEY_ID: ACCESS_KEY_ID.value,
+        ACCESS_KEY_SECRET: ACCESS_KEY_SECRET.value,
+        APP_ID: APP_ID.value,
+        ROOM_OWNER_AUTH_CODE: ROOM_OWNER_AUTH_CODE.value,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      configurationResult.value = {
+        success: false,
+        message: errorData.error
+          ? t('settings.bilibili-danmaku.configure.configFailedWithError', { error: errorData.error })
+          : t('settings.bilibili-danmaku.configure.configFailed', {
+              status: response.status,
+              statusText: response.statusText,
+            }),
+      }
+      return
+    }
+
+    const data = await response.json()
+    if (data.status === 'success') {
+      configurationResult.value = {
+        success: true,
+        message: t('settings.bilibili-danmaku.configure.configSuccess'),
+      }
+    }
+    else {
+      configurationResult.value = {
+        success: false,
+        message: data.message
+          ? t('settings.bilibili-danmaku.configure.configFailedWithMessage', { message: data.message })
+          : t('settings.bilibili-danmaku.configure.configFailedGeneric'),
+      }
+    }
+  }
+  catch (error) {
+    configurationResult.value = {
+      success: false,
+      message: t('settings.bilibili-danmaku.configure.configError', {
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    }
+  }
+  finally {
+    isConfiguringService.value = false
+  }
+}
+
 async function refetch() {
   loading.value++
   // service startup time
@@ -263,6 +328,23 @@ function handleResetSettings() {
       </template>
     </Alert>
 
+    <!-- Configuration Result -->
+    <Alert v-if="configurationResult && !isConfiguringService" :type="configurationResult.success ? 'success' : 'error'">
+      <template #title>
+        {{ configurationResult.success ? t('settings.bilibili-danmaku.configure.success') : t('settings.bilibili-danmaku.configure.failed') }}
+      </template>
+      <template #content>
+        <div class="whitespace-pre-wrap break-all">
+          {{ configurationResult.message }}
+        </div>
+      </template>
+    </Alert>
+    <Alert v-if="isConfiguringService" type="loading">
+      <template #title>
+        {{ t('settings.bilibili-danmaku.configure.configuring') }}
+      </template>
+    </Alert>
+
     <ProviderSettingsLayout
       :provider-name="providerMetadata?.localizedName"
       :provider-icon="providerMetadata?.icon"
@@ -329,15 +411,25 @@ function handleResetSettings() {
               >
             </label>
 
-            <!-- Test Service Button -->
-            <div class="pt-2">
+            <!-- Test and Configure Service Buttons -->
+            <div class="flex flex-wrap gap-2 pt-2">
               <button
                 type="button"
                 class="rounded-lg bg-primary-500 px-4 py-2 text-sm text-white font-medium dark:bg-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:hover:bg-primary-700 dark:focus:ring-offset-neutral-900"
-                :disabled="isTestingService"
+                :disabled="isTestingService || isConfiguringService"
                 @click="testService"
               >
                 {{ t('settings.bilibili-danmaku.test.button') }}
+              </button>
+
+              <button
+                type="button"
+                class="rounded-lg bg-primary-500 px-4 py-2 text-sm text-white font-medium dark:bg-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:hover:bg-primary-700 dark:focus:ring-offset-neutral-900"
+
+                :disabled="isTestingService || isConfiguringService"
+                @click="configureService"
+              >
+                {{ t('settings.bilibili-danmaku.configure.button') }}
               </button>
             </div>
           </div>

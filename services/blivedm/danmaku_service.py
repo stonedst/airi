@@ -150,6 +150,13 @@ def configure():
     if not all([access_key_id, access_key_secret, app_id, room_owner_auth_code]):
         return jsonify({'error': 'Missing required parameters'}), 400
     
+    # 确保当前线程有事件循环
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
     # 创建新的客户端
     client = blivedm.OpenLiveClient(
         access_key_id=access_key_id,
@@ -174,8 +181,6 @@ async def stop_client():
     global client, handler
     if client:
         await client.stop_and_close()
-        if handler:
-            handler.close()
         client = None
         handler = None
 
@@ -202,5 +207,6 @@ def stop():
     else:
         return jsonify({'status': 'error', 'message': 'Danmaku service not running'})
 
+    
 if __name__ == '__main__':
     app.run(host='localhost', port=12346, debug=True)
