@@ -74,6 +74,7 @@ words:
   - dompurify
   - dotenvx
   - DownloadLive2DSDK
+  - Downsampling
   - dreamlog
   - dtolnay
   - dtype
@@ -122,6 +123,7 @@ words:
   - Keyyable
   - kirakira
   - kwaa
+  - lemonneko
   - lemonnekogh
   - lerp
   - libsamplerate
@@ -156,6 +158,7 @@ words:
   - mousedown
   - mouseup
   - msvc
+  - multisampling
   - Myriam
   - ndarray
   - Neko
@@ -190,6 +193,8 @@ words:
   - pinia
   - pixi
   - pixiv
+  - Pmndrs
+  - pmrem
   - popmotion
   - poppin
   - PREFLIGHTS
