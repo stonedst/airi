@@ -4,6 +4,7 @@ import type { ChatProvider } from '@xsai-ext/shared-providers'
 import WhisperWorker from '@proj-airi/stage-ui/libs/workers/worker?worker&url'
 
 import { toWAVBase64 } from '@proj-airi/audio'
+import { Client } from '@proj-airi/server-sdk/'
 import { useMicVAD, useWhisper } from '@proj-airi/stage-ui/composables'
 import { useAudioContext } from '@proj-airi/stage-ui/stores/audio'
 import { useChatStore } from '@proj-airi/stage-ui/stores/chat'
@@ -51,6 +52,24 @@ const { transcribe: generate, terminate } = useWhisper(WhisperWorker, {
     })
   },
 })
+
+const wsClient = new Client({
+  url: 'ws://localhost:8765',
+  name: 'danmaku-receiver',
+  possibleEvents: ['input:text'],
+})
+
+// 监听弹幕事件
+wsClient.onEvent('input:text', (event: any) => {
+  const danmaku = event.data?.text || ''
+  if (danmaku.trim()) {
+    messageInput.value = danmaku
+    handleSend()
+  }
+})
+
+// 连接 WebSocket
+wsClient.connect()
 
 async function handleSend() {
   if (!messageInput.value.trim() || isComposing.value) {
